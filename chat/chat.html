@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JARVIS CHAT</title>
+<style>
+body {
+    background:#08111f;
+    color:white;
+    font-family:Arial;
+    padding:15px;
+}
+.box {
+    max-width:450px;
+    margin:20px auto;
+    background:#142238;
+    padding:20px;
+    border-radius:15px;
+}
+h2 {color:#00eaff;text-align:center}
+input,button {
+    width:100%;
+    padding:13px;
+    margin:7px 0;
+    box-sizing:border-box;
+    border:0;
+    border-radius:8px;
+}
+input {background:#263950;color:white}
+button {background:#00d9ee;font-weight:bold}
+#messages {
+    height:250px;
+    overflow-y:auto;
+    background:#08111f;
+    padding:10px;
+    border-radius:8px;
+    overflow-wrap:anywhere;
+}
+.notice {color:#ff7272;text-align:center}
+</style>
+</head>
+<body>
+<div class="box">
+<h2>🤖 JARVIS CHAT</h2>
+
+<input id="searchName" placeholder="Foydalanuvchi loginini yozing">
+<button onclick="searchUser()">ODAM QIDIRISH</button>
+<p id="searchResult"></p>
+
+<input id="recipient" placeholder="Foydalanuvchi ID">
+<div id="messages"></div>
+
+<input id="message" placeholder="Xabar yozing...">
+<button onclick="sendMessage()">YUBORISH</button>
+<p id="status" class="notice"></p>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const token = localStorage.getItem("jarvisToken");
+let socket;
+
+if (token) {
+    socket = io({
+        auth: {token}
+    });
+
+    socket.on("connect", () => {
+        statusText("Chatga ulandingiz!");
+    });
+
+    socket.on("connect_error", error => {
+        statusText(error.message);
+    });
+
+    socket.on("blocked", data => {
+        statusText(data.message);
+    });
+
+    socket.on("private_message", data => {
+        addMessage(data.from + ": " + data.message);
+    });
+
+    socket.on("message_error", data => {
+        statusText(data.message);
+    });
+} else {
+    statusText("Avval akkauntga kiring!");
+}
+
+function statusText(text) {
+    document.getElementById("status").textContent = text;
+}
+
+async function searchUser() {
+    const name = document.getElementById("searchName").value.trim();
+    const result = document.getElementById("searchResult");
+
+    if (!name) {
+        result.textContent = "Login kiriting!";
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            "/search/" + encodeURIComponent(name),
+            {headers: {Authorization: "Bearer " + token}}
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            result.textContent = data.error;
+            return;
+        }
+
+        document.getElementById("recipient").value = data.id;
+        result.textContent =
+            "Topildi: " + data.username + " | Tarif: " + data.plan;
+
+    } catch {
+        result.textContent = "Server bilan aloqa yo'q!";
+    }
+}
+
+function addMessage(text) {
+    const line = document.createElement("p");
+    line.textContent = text;
+    const messages = document.getElementById("messages");
+    messages.appendChild(line);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function sendMessage() {
+    if (!socket || !socket.connected) {
+        statusText("Chat serveriga ulanmagan!");
+        return;
+    }
+
+    const to = document.getElementById("recipient").value.trim();
+    const message = document.getElementById("message").value.trim();
+
+    if (!to || !message) {
+        statusText("Foydalanuvchini toping va xabar yozing!");
+        return;
+    }
+
+    socket.emit("private_message", {to, message});
+    addMessage("Siz: " + message);
+    document.getElementById("message").value = "";
+}
+</script>
+</body>
+</html>

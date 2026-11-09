@@ -1,0 +1,9 @@
+.buildozer/
+bin/
+node_modules/
+admin/data/
+.env
+*.key
+*.keystore
+*.jks
+gemini_key.txt

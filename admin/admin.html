@@ -1,0 +1,102 @@
+<!DOCTYPE html><html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JARVIS ADMIN</title>
+<style>
+body {
+    background: #080d18;
+    color: white;
+    font-family: Arial;
+    text-align: center;
+    padding: 25px;
+}
+.box {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 25px;
+    background: #142238;
+    border-radius: 15px;
+}
+input, button {
+    width: 100%;
+    padding: 13px;
+    margin: 10px 0;
+    border: 0;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+button {
+    background: #00d9ee;
+    font-weight: bold;
+}
+#panel { display: none; }
+</style>
+</head>
+<body>
+<div class="box">
+<h2>👑 JARVIS ADMIN</h2><div id="login">
+<p>Maxfiy admin parolini kiriting</p>
+<input id="password" type="password" placeholder="Admin paroli">
+<button onclick="login()">KIRISH</button>
+<p id="message"></p>
+</div><div id="panel">
+<h2>Admin panelga xush kelibsiz!</h2>
+<p>Sen JARVIS administratorisan.</p>
+<button onclick="logout()">CHIQISH</button>
+</div>
+</div><script>
+let token = "";
+
+async function login() {
+    const password =
+        document.getElementById("password").value;
+
+    try {
+        const response = await fetch(
+            "http://127.0.0.1:3001/login",
+            {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({password})
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            document.getElementById("message").textContent =
+                data.error || "Kirish amalga oshmadi";
+            return;
+        }
+
+        token = data.token;
+
+        const check = await fetch(
+            "http://127.0.0.1:3001/admin",
+            {
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            }
+        );
+
+        if (!check.ok) throw new Error("Tekshiruv xatosi");
+
+        document.getElementById("login").style.display = "none";
+        document.getElementById("panel").style.display = "block";
+
+    } catch (e) {
+        document.getElementById("message").textContent =
+            "Serverga ulanib bo‘lmadi. Admin serverni tekshiring.";
+    }
+}
+
+function logout() {
+    token = "";
+    document.getElementById("panel").style.display = "none";
+    document.getElementById("login").style.display = "block";
+    document.getElementById("password").value = "";
+}
+</script></body>
+</html>

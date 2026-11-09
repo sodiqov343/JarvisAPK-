@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JARVIS ACCOUNT</title>
+<style>
+body {
+    background: #080d18;
+    color: white;
+    font-family: Arial;
+    padding: 20px;
+}
+.box {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 25px;
+    background: #142238;
+    border-radius: 15px;
+}
+h2 {
+    color: #00eaff;
+    text-align: center;
+}
+input, button {
+    width: 100%;
+    padding: 14px;
+    margin: 9px 0;
+    box-sizing: border-box;
+    border: 0;
+    border-radius: 8px;
+}
+input {
+    background: #263950;
+    color: white;
+}
+button {
+    background: #00d9ee;
+    font-weight: bold;
+}
+</style>
+</head>
+<body>
+<div class="box">
+<h2>🤖 JARVIS ACCOUNT</h2>
+
+<input id="username" placeholder="Login">
+<input id="password" type="password" placeholder="Parol">
+
+<button onclick="send('/register')">RO‘YXATDAN O‘TISH</button>
+<button onclick="send('/login')">KIRISH</button>
+
+<p id="result"></p>
+</div>
+
+<script>
+async function send(url) {
+    const result = document.getElementById("result");
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!username || !password) {
+        result.textContent = "Login va parolni kiriting!";
+        return;
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({username, password})
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            result.textContent = data.error || "Xatolik!";
+            return;
+        }
+
+        localStorage.setItem("jarvisToken", data.token);
+        localStorage.setItem("jarvisUserId", data.id);
+        localStorage.setItem("jarvisPlan", data.plan);
+
+        result.textContent = "Muvaffaqiyatli! Akkaunt ochildi.";
+    } catch (error) {
+        result.textContent = "Serverga ulanib bo‘lmadi!";
+    }
+}
+</script>
+</body>
+</html>
