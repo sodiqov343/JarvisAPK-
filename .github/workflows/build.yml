@@ -25,10 +25,27 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git zip unzip build-essential libffi-dev libssl-dev zlib1g-dev autoconf automake libtool pkg-config cmake
+          sudo apt-get install -y \
+            git zip unzip \
+            build-essential \
+            libffi-dev libssl-dev \
+            zlib1g-dev \
+            autoconf automake libtool \
+            pkg-config cmake
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android tools
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
 
       - name: Install Buildozer
         run: |
@@ -43,3 +60,4 @@ jobs:
         with:
           name: JARVIS-APK
           path: bin/*.apk
+          if-no-files-found: error
